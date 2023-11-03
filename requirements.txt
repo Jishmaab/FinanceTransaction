@@ -1,0 +1,11 @@
+asgiref==3.7.2
+autopep8==2.0.4
+Django==4.2.6
+djangorestframework==3.14.0
+djangorestframework-api-key==2.3.0
+pep8==1.7.1
+psycopg2==2.9.9
+pycodestyle==2.11.1
+pytz==2023.3.post1
+sqlparse==0.4.4
+tzdata==2023.3
