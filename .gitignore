@@ -8,6 +8,7 @@
 */migrations/
 !**/migrations/_init_.py
 .env
-logs/
+# logs/
+*/log
 media
 env/

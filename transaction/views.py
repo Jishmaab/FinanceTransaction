@@ -1,4 +1,4 @@
-from datetime import timedelta, timezone
+from datetime import timedelta
 from django.utils import timezone
 
 from django.contrib.auth import authenticate
@@ -12,14 +12,15 @@ from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.generics import UpdateAPIView
-from rest_framework import exceptions
+from rest_framework import generics
+from rest_framework import exceptions, filters
 from rest_framework.viewsets import ModelViewSet
 
 from utils.exceptions import CustomException, fail, success
 from .permissions import IsOwnerOrReadOnly
 
-from .models import User, Contact,Transaction
-from .seializers import UserSerializer, validate_password, ContactSerializer, TransactionSerializer
+from .models import User, Contact,Transaction, Payment, Feedback
+from .seializers import UserSerializer, validate_password, ContactSerializer, TransactionSerializer, PaymentSerializer, FeedbackSerializer
 
 
 class SignupView(APIView):
@@ -114,4 +115,29 @@ class TransactionViewSet(ModelViewSet):
     serializer_class = TransactionSerializer
     permission_classes = [IsAuthenticated]    
 
-   
+class PaymentViewSet(ModelViewSet):
+    queryset = Payment.objects.all()
+    serializer_class = PaymentSerializer
+    permission_classes = [IsAuthenticated]  
+
+class TransactionHistoryView(generics.ListAPIView):
+    serializer_class = TransactionSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['amount', 'category', 'due_date']
+
+    def get_queryset(self):
+        user = self.request.user
+        transactions = Transaction.objects.filter(user=user)
+        payments = Payment.objects.filter(transaction__user=user)
+        return transactions, payments      
+
+class FeedbackView(generics.ListCreateAPIView):
+    serializer_class = FeedbackSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Feedback.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)   
