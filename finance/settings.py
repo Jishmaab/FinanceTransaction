@@ -165,7 +165,7 @@ REST_FRAMEWORK = {
     'ALLOWED_VERSIONS': ['1.0', '2.0','3.0','3.14'],
     'DEFAULT_VERSION': '1.0',
     "DEFAULT_PERMISSION_CLASSES": [
-    # "rest_framework_api_key.permissions.HasAPIKey",
+    "rest_framework_api_key.permissions.HasAPIKey",
     ]
 }
 
