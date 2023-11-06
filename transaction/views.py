@@ -144,10 +144,10 @@ class PaymentViewSet(ModelViewSet):
 
 class TransactionHistoryView(generics.ListAPIView):
     serializer_class = TransactionHistorySerializer
-    filter_backends = [filters.SearchFilter,filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['amount', 'category', 'due_date']
     ordering_fields = ['date', 'amount', 'category', 'due_date']
-    queryset = Transaction.objects.all()  
+    queryset = Transaction.objects.all()
 
     def get_queryset(self):
         user = self.request.user
@@ -178,7 +178,7 @@ class TransactionHistoryView(generics.ListAPIView):
 
 class FeedbackView(generics.ListCreateAPIView):
     serializer_class = FeedbackSerializer
-    permission_classes = [HasAPIKey,IsAuthenticated]
+    permission_classes = [HasAPIKey, IsAuthenticated]
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -193,7 +193,7 @@ class FeedbackView(generics.ListCreateAPIView):
 
 class FeedbackResponseView(RetrieveUpdateAPIView):
     serializer_class = FeedbackSerializer
-    permission_classes = [HasAPIKey,IsAuthenticated]
+    permission_classes = [HasAPIKey, IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
