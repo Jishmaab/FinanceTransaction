@@ -1,26 +1,29 @@
 from datetime import timedelta
-from django.utils import timezone
 
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.utils import timezone
+from rest_framework import exceptions, filters, generics
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework_api_key.permissions import HasAPIKey
+from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
-from rest_framework.generics import UpdateAPIView
-from rest_framework import generics
-from rest_framework import exceptions, filters
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
+from rest_framework_api_key.permissions import HasAPIKey
 
 from utils.exceptions import CustomException, fail, success
-from .permissions import IsOwnerOrReadOnly
 
-from .models import User, Contact,Transaction, Payment, Feedback
-from .seializers import UserSerializer, validate_password, ContactSerializer, TransactionSerializer, PaymentSerializer, FeedbackSerializer
+from .models import (Contact, Feedback, Payment, Transaction,
+                     TransactionHistory, User)
+from .permissions import IsOwnerOrReadOnly
+from .seializers import (ContactSerializer, FeedbackSerializer,
+                         PaymentSerializer, TransactionHistorySerializer,
+                         TransactionSerializer, UserSerializer,
+                         validate_password)
 
 
 class SignupView(APIView):
@@ -75,8 +78,10 @@ class LoginView(APIView):
         except Exception as e:
             raise CustomException(str(e))
 
+
 class LogoutView(APIView):
     permission_classes = [HasAPIKey, IsAuthenticated]
+
     def post(self, request: Request, format=None) -> Response:
         try:
             token = request.user.auth_token
@@ -85,18 +90,21 @@ class LogoutView(APIView):
                 success("Logged out successfully"))
         except Exception as e:
             raise CustomException(str(e))
-        
+
+
 class UserProfileView(UpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, HasAPIKey]
+
     def get_object(self):
         return self.request.user
+
     def update(self, request, *args, **kwargs):
         try:
             user = self.get_object()
             partial = kwargs.pop('partial', False)
             serializer = self.get_serializer(
-            user, data=request.data, partial=partial)
+                user, data=request.data, partial=partial)
             serializer.is_valid(raise_exception=True)
             print(serializer.validated_data)
             self.perform_update(serializer)
@@ -105,39 +113,91 @@ class UserProfileView(UpdateAPIView):
         except Exception as e:
             raise exceptions.APIException(str(e))
 
+
 class ContactViewSet(ModelViewSet):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
-    permission_classes = [HasAPIKey,IsOwnerOrReadOnly]
+    permission_classes = [HasAPIKey, IsOwnerOrReadOnly]
+
 
 class TransactionViewSet(ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
-    permission_classes = [IsAuthenticated]    
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+        transaction = serializer.instance
+        transaction.update_balance()
+
 
 class PaymentViewSet(ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
-    permission_classes = [IsAuthenticated]  
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save()
+        payment = serializer.instance
+        payment.update_transaction_balance()
+
 
 class TransactionHistoryView(generics.ListAPIView):
-    serializer_class = TransactionSerializer
-    filter_backends = [filters.SearchFilter]
+    serializer_class = TransactionHistorySerializer
+    filter_backends = [filters.SearchFilter,filters.OrderingFilter]
     search_fields = ['amount', 'category', 'due_date']
+    ordering_fields = ['date', 'amount', 'category', 'due_date']
+    queryset = Transaction.objects.all()  
 
     def get_queryset(self):
         user = self.request.user
         transactions = Transaction.objects.filter(user=user)
         payments = Payment.objects.filter(transaction__user=user)
-        return transactions, payments      
+        history = []
+        for transaction in transactions:
+            history_entry = {
+                'id': transaction.id,
+                'date': transaction.date,
+                'description': transaction.description,
+                'amount': transaction.amount,
+                'balance': transaction.balance,
+                'category': transaction.category,
+                'due_date': transaction.due_date,
+            }
+            transaction_history = TransactionHistory.objects.filter(
+                transaction=transaction).first()
+            if transaction_history:
+                history_entry['status'] = transaction_history.status
+            else:
+                history_entry['status'] = None
+
+            history.append(history_entry)
+
+        return history
+
 
 class FeedbackView(generics.ListCreateAPIView):
     serializer_class = FeedbackSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [HasAPIKey,IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Feedback.objects.all()
+        else:
+            user = self.request.user
+            return Feedback.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class FeedbackResponseView(RetrieveUpdateAPIView):
+    serializer_class = FeedbackSerializer
+    permission_classes = [HasAPIKey,IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
         return Feedback.objects.filter(user=user)
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)   
+    def perform_update(self, serializer):
+        serializer.save(response=self.request.data.get('response'))

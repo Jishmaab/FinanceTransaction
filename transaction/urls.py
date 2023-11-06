@@ -16,4 +16,6 @@ urlpatterns = [
     path('profile/', views.UserProfileView.as_view(), name='profile'),
     path('transaction-history/', views.TransactionHistoryView.as_view(), name='transaction-history'),
     path('feedback/',views.FeedbackView.as_view(), name='feedback-list'),
+    path('feedbacks/<int:pk>/', views.FeedbackResponseView.as_view(), name='feedback-response')
+
 ]+ router.urls    

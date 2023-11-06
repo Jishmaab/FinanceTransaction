@@ -41,12 +41,17 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = '__all__'               
 
-class TransactionHistorySerializer(serializers.ModelSerializer):
-     class Meta:
-        model = TransactionHistory
-        fields = '__all__'          
-
 class FeedbackSerializer(serializers.ModelSerializer):
      class Meta:
         model = Feedback
         fields = '__all__'                  
+
+class TransactionHistorySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    date = serializers.DateField()
+    description = serializers.CharField(max_length=50)
+    amount = serializers.IntegerField()
+    balance = serializers.IntegerField()
+    category = serializers.IntegerField()
+    due_date = serializers.DateField()
+    status = serializers.IntegerField()

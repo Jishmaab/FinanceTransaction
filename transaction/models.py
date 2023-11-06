@@ -41,6 +41,17 @@ class Transaction(models.Model):
     due_date = models.DateField(null=True, blank=True)
     class Meta:
         db_table = 'Transaction'
+        
+    def update_balance(self):
+        previous_transaction = Transaction.objects.filter(
+            user=self.user, date__lt=self.date
+        ).order_by('-date').first()
+        previous_balance = previous_transaction.balance if previous_transaction else 0
+        if self.category == Transaction.CategoryChoices.debit:
+            self.balance = previous_balance - self.amount
+        else:
+            self.balance = previous_balance + self.amount
+        self.save()    
 
 class Payment(models.Model):
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)    
@@ -48,12 +59,14 @@ class Payment(models.Model):
     paid_amount = models.IntegerField(null=True, blank=True)
     class Meta:
         db_table = 'Payment'
+    def update_transaction_balance(self):
+        self.transaction.update_balance()    
 
 class TransactionHistory(models.Model):
     class StatusChoices(models.IntegerChoices):
         completed = 0, 'completed '
         pending = 1, 'pending'
-    transaction = models.OneToOneField(User,on_delete=models.CASCADE)
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE) 
     status = models.IntegerField(choices=StatusChoices.choices, default=0) 
     class Meta:
         db_table = 'TransactionHistory'
