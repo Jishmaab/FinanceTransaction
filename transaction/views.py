@@ -24,7 +24,7 @@ from .permissions import IsOwnerOrReadOnly
 from .seializers import (ContactSerializer, FeedbackSerializer,
                          PaymentSerializer, TransactionHistorySerializer,
                          TransactionSerializer, UserSerializer,
-                         validate_password)
+                         )
 
 
 class SignupView(APIView):
@@ -55,7 +55,6 @@ class LoginView(APIView):
         try:
             username = request.data.get('username')
             password = request.data.get('password')
-            validate_password(password)
             user = authenticate(username=username, password=password)
 
             if user is not None:

@@ -10,9 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-from pathlib import Path
 import os
 from datetime import timedelta
+from pathlib import Path
+
 import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -103,7 +104,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': env('DB_NAME'),
         'USER': env('DB_USER'),
-        'PASSWORD':env('DB_PASSWORD'),
+        'PASSWORD': env('DB_PASSWORD'),
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -127,6 +128,25 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+PASSWORD_REGEX_PATTERNS = (
+    {
+        'pattern': r'[A-Z]+',
+        'message': 'Atleast one upper case letter is required'
+    },
+    {
+        'pattern': r'[a-z]+',
+        'message': 'Atleast one lower case letter is required'
+    },
+    {
+        'pattern': r'[0-9]+',
+        'message': 'Atleast one numeric value is required'
+    },
+    {
+        'pattern': r'^\S+$',
+        'message': 'Password should not contain any white spaces'
+    }
+)
+PASSWORD_ALLOWED_SPECIAL_CHARACTERS = '~`!@#$%^&*()_-+={[}]|\:;\'"<,>.?/'
 
 
 # Internationalization
@@ -158,14 +178,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': [
-    'finance.modules.authentication.ExpiringTokenAuthentication' ],
+        'finance.modules.authentication.ExpiringTokenAuthentication'],
     'DEFAULT_FILTER_BACKENDS': ['rest_framework.filters.SearchFilter'],
     'SEARCH_PARAM': 'search_param',
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.AcceptHeaderVersioning',
-    'ALLOWED_VERSIONS': ['1.0', '2.0','3.0','3.14'],
+    'ALLOWED_VERSIONS': ['1.0', '2.0', '3.0', '3.14'],
     'DEFAULT_VERSION': '1.0',
     "DEFAULT_PERMISSION_CLASSES": [
-    "rest_framework_api_key.permissions.HasAPIKey",
+        "rest_framework_api_key.permissions.HasAPIKey",
     ]
 }
 
@@ -179,7 +199,8 @@ TOKEN_EXPIRY_HOURS = env.int('TOKEN_EXPIRY_HOURS', 24)
 TOKEN_EXPIRY_MINUTES = env.int('TOKEN_EXPIRY_MINUTES', 0)
 TOKEN_EXPIRY_SECONDS = env.int('TOKEN_EXPIRY_SECONDS', 0)
 
-TOKEN_EXPIRY = timedelta(hours=TOKEN_EXPIRY_HOURS, minutes=TOKEN_EXPIRY_MINUTES, seconds=TOKEN_EXPIRY_SECONDS)
+TOKEN_EXPIRY = timedelta(hours=TOKEN_EXPIRY_HOURS,
+                         minutes=TOKEN_EXPIRY_MINUTES, seconds=TOKEN_EXPIRY_SECONDS)
 
 LOGGING = {
     'version': 1,
