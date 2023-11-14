@@ -6,10 +6,12 @@ from rest_framework import serializers
 from .models import *
 from .validators import (PasswordRegexValidation,
                          PasswordSpecialCharacterValidation)
+from utils.custompassword import PasswordField
 
 
 class UserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.FileField()
+    password = PasswordField(write_only=True, required=True)
 
     class Meta:
         model = User
