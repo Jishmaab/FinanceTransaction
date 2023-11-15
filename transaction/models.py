@@ -96,3 +96,17 @@ class Feedback(models.Model):
 
     class Meta:
         db_table = 'Feedback'
+
+
+class ExcelData(models.Model):
+    order_date = models.CharField(max_length=25,null=True,blank=True)
+    order_quantity = models.CharField(max_length=25,null=True,blank=True)
+    sales = models.FloatField(null=True,blank=True)
+    ship_mode = models.CharField(max_length=25,null=True,blank=True)
+    unit_price = models.FloatField(null=True,blank=True)
+    customer_name = models.CharField(max_length=255,null=True,blank=True)
+    customer_segment = models.CharField(max_length=255,null=True,blank=True)
+    product_category = models.CharField(max_length=255,null=True,blank=True)
+
+    class Meta:
+        db_table = 'excel'

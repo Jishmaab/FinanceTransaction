@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import openpyxl
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -8,6 +9,7 @@ from rest_framework import exceptions, filters, generics
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -15,16 +17,16 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_api_key.permissions import HasAPIKey
 
-from utils.exceptions import CustomException, fail, success
 from finance.viewsets import ModelViewSet
+from utils.exceptions import CustomException, fail, success
 
-from .models import (Contact, Feedback, Payment, Transaction,
+from .models import (Contact, ExcelData, Feedback, Payment, Transaction,
                      TransactionHistory, User)
 from .permissions import IsOwnerOrReadOnly
-from .seializers import (ContactSerializer, FeedbackSerializer,
-                         PaymentSerializer, TransactionHistorySerializer,
-                         TransactionSerializer, UserSerializer,
-                         )
+from .seializers import (ContactSerializer, ExcelDataSerializer,
+                         FeedbackSerializer, PaymentSerializer,
+                         TransactionHistorySerializer, TransactionSerializer,
+                         UserSerializer)
 
 
 class SignupView(APIView):
@@ -201,3 +203,48 @@ class FeedbackResponseView(RetrieveUpdateAPIView):
 
     def perform_update(self, serializer):
         serializer.save(response=self.request.data.get('response'))
+
+
+class ExcelUploadView(APIView):
+    parser_classes = (MultiPartParser,)
+
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        file_serializer = ExcelDataSerializer(data=request.data)
+
+        if file_serializer.is_valid():
+
+            excel_file = request.data['file']
+
+            workbook = openpyxl.load_workbook(excel_file)
+            worksheet = workbook.active
+
+            column_mapping = {
+                'order_date': 1,
+                'order_quantity': 2,
+                'sales': 3,
+                'ship_mode': 4,
+                'unit_price': 6,
+                'customer_name':7 ,
+                'customer_segment': 8,
+                'product_category': 9,
+            }
+
+            for row in worksheet.iter_rows(min_row=2, values_only=True):
+                data_to_save = {}
+                for field, index in column_mapping.items():
+                    value = row[index]
+                    if field in ['sales', 'unit_price']:
+                        try:
+                            value = float(value)
+                        except (TypeError, ValueError):
+                            value = None
+                    data_to_save[field] = value
+
+                ExcelData.objects.create(**data_to_save)
+
+            return Response(success({'message': 'File uploaded and data saved successfully'}))
+        else:
+            return Response(fail)

@@ -19,18 +19,17 @@ class UserSerializer(serializers.ModelSerializer):
                   'last_name', 'user_type', 'profile_picture']
         extra_kwargs = {'password': {'write_only': True}}
 
-    def validate_password(self, value):
-        common_validator = CommonPasswordValidator()
-        length_validator = MinimumLengthValidator(min_length=8)
-        numeric_validator = NumericPasswordValidator()
+    # def validate_password(self, value):
+    #     common_validator = CommonPasswordValidator()
+    #     length_validator = MinimumLengthValidator(min_length=8)
+    #     numeric_validator = NumericPasswordValidator()
 
-        regex_validator = PasswordRegexValidation()
-        special_char_validator = PasswordSpecialCharacterValidation()
+    #     regex_validator = PasswordRegexValidation()
+    #     special_char_validator = PasswordSpecialCharacterValidation()
 
-        for validator in [common_validator, length_validator, numeric_validator, regex_validator, special_char_validator]:
-            validator.validate(value, self.instance)
-
-        return value
+    #     for validator in [common_validator, length_validator, numeric_validator, regex_validator, special_char_validator]:
+    #         validator.validate(value, self.instance)
+    #     return value
 
     def create(self, validated_data):
         user = User(
@@ -79,3 +78,9 @@ class TransactionHistorySerializer(serializers.Serializer):
     category = serializers.IntegerField()
     due_date = serializers.DateField()
     status = serializers.IntegerField()
+
+
+class ExcelDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExcelData
+        fields = '__all__'
