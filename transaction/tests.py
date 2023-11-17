@@ -2,9 +2,9 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from openpyxl import Workbook
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APIRequestFactory, APITestCase
 
-from .models import Contact, Feedback, Transaction
+from .models import Contact, ExcelData, Feedback, Transaction
 
 
 class LoginViewTests(APITestCase):
@@ -46,7 +46,7 @@ class LoginViewTests(APITestCase):
         # self.assertIn('password', response.data)
 
 
-class TransactionViewSetTests(APITestCase):
+class TransactionViewSetTests(APIRequestFactory):
     def setUp(self):
         User = get_user_model()
         self.user = User.objects.create_user(
@@ -62,10 +62,11 @@ class TransactionViewSetTests(APITestCase):
             'amount': 100.00,
             'description': 'Test Transaction',
         }
-        url = reverse('transaction-list')
+        url = reverse('/api/transaction/')
         response = self.client.post(url, transaction_data, format='json')
-        # print(response.content)
-        # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        print(response.request)
+        # print(response.json())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # self.assertEqual(Transaction.objects.count(), 1)
         transaction = Transaction.objects.first()
         self.assertEqual(transaction.amount, transaction_data['amount'])
@@ -77,7 +78,7 @@ class TransactionViewSetTests(APITestCase):
         # self.assertEqual(transaction.balance, self.user.profile.balance)
 
 
-class ExcelUploadViewTests(APITestCase):
+class ExcelUploadViewTests(APIRequestFactory):
     def setUp(self):
         User = get_user_model()
         self.user = User.objects.create_user(
@@ -94,12 +95,12 @@ class ExcelUploadViewTests(APITestCase):
         excel_file_path = "test_excel_file.xlsx"
         workbook.save(excel_file_path)
         with open(excel_file_path, 'rb') as excel_file:
-            url = reverse('excel-upload')
+            # url = reverse('excel-upload')
             data = {'file': excel_file}
-            response = self.client.post(url, data, format='multipart')
+            response = self.client.post('/api/upload/excel/', data, format='multipart')
             # print(response.content)
-            # self.assertEqual(response.status_code, status.HTTP_200_OK)
-            # self.assertEqual(ExcelData.objects.count(), 1)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(ExcelData.objects.count(), 1)
             # import os
             # # os.remove(excel_file_path)
 
