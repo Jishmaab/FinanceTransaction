@@ -1,0 +1,40 @@
+
+[
+    {
+        "model": "transaction.user",
+        "pk": 1,
+        "fields": {
+            "username": "david99",
+            "email": "david99@gmail.com",
+            "password": "David@123"
+        }
+    },
+    {
+        "model": "transaction.user",
+        "pk": 2,
+        "fields": {
+            "username": "jamesjose",
+            "email": "jamesjose@gmail.com",
+            "password": "James@123"
+        }
+    },
+    {
+        "model": "transaction.user",
+        "pk": 3,
+        "fields": {
+            "username": "sofia22",
+            "email": "sofiapaul@gmail.com",
+            "password": "Sofia@123"
+        }
+    },
+    {
+        "model": "transaction.user",
+        "pk": 3,
+        "fields": {
+            "username": "alice45",
+            "email": "alice456@gmail.com",
+            "password": "Alice@123"
+        }
+    }
+    
+]
