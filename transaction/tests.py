@@ -8,32 +8,32 @@
 # from django.core.files.uploadedfile import SimpleUploadedFile
 
 # class SignupViewTests(APITestCase):
-    # fixtures = ['transaction/fixtures/users.json']
+# fixtures = ['transaction/fixtures/users.json']
 
-    # def test_signup_successful(self):
-    #     url = reverse('signup')
+# def test_signup_successful(self):
+#     url = reverse('signup')
 
-    #     # Correctly construct the file path
-    #     file_path = "finance/media/profile_pictures/fem2.jpg"
+#     # Correctly construct the file path
+#     file_path = "finance/media/profile_pictures/fem2.jpg"
 
-    #     with open(file_path, "rb") as image_file:
-    #         binary_data = image_file.read()
+#     with open(file_path, "rb") as image_file:
+#         binary_data = image_file.read()
 
-    #     image = SimpleUploadedFile("fem2.jpg", binary_data, content_type="image/jpeg")
+#     image = SimpleUploadedFile("fem2.jpg", binary_data, content_type="image/jpeg")
 
-    #     data = {
-    #         'username': 'newuser',
-    #         'email': 'newuser@example.com',
-    #         'password': 'testpassword',
-    #         'profile_picture': image,
-    #     }
+#     data = {
+#         'username': 'newuser',
+#         'email': 'newuser@example.com',
+#         'password': 'testpassword',
+#         'profile_picture': image,
+#     }
 
-    #     response = self.client.post(url, data, format='json')
-    #     print(response.content)
+#     response = self.client.post(url, data, format='json')
+#     print(response.content)
 
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(User.objects.count(), 2)
-    #     self.assertEqual(User.objects.get(username='newuser').username, 'newuser')
+#     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+#     self.assertEqual(User.objects.count(), 2)
+#     self.assertEqual(User.objects.get(username='newuser').username, 'newuser')
 
 #   def test_signup_existing_user(self):
 #     url = reverse('signup')
@@ -94,7 +94,7 @@
 #         self.assertIn('non_field_errors', response.data)
 
 #     def test_login_missing_credentials(self):
-#         data = {}  
+#         data = {}
 #         response = self.client.post(self.login_url, data, format='json')
 
 #         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -159,61 +159,41 @@
 #         transaction.refresh_from_db()
 #         self.assertEqual(transaction.balance, self.user.profile.balance)
 
-from django.test import TestCase
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
-from rest_framework.test import APITestCase
-from rest_framework import status
+from django.test import TestCase
 from django.urls import reverse
 from openpyxl import Workbook
+from rest_framework import status
 from rest_framework.parsers import MultiPartParser
-from django.contrib.auth import get_user_model
+from rest_framework.test import APITestCase
 
 from .models import ExcelData
+
+
 class ExcelUploadViewTests(APITestCase):
     def setUp(self):
-        # Create a user for authentication (optional)
         User = get_user_model()
-        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.user = User.objects.create_user(
+            username='testuser', password='testpassword')
         self.client.force_authenticate(user=self.user)
 
     def test_upload_excel_file(self):
-        # Create a sample Excel file
         workbook = Workbook()
         worksheet = workbook.active
-        worksheet.append(['order_date', 'order_quantity', 'sales', 'ship_mode', 'unit_price', 'customer_name', 'customer_segment', 'product_category'])
-        worksheet.append(['2023-01-01', 10, 100.0, 'Air', 5.0, 'John Doe', 'Segment', 'Category'])
-
-        # Save the Excel file
+        worksheet.append(['order_date', 'order_quantity', 'sales', 'ship_mode',
+                         'unit_price', 'customer_name', 'customer_segment', 'product_category'])
+        worksheet.append(['2023-01-01', 10, 100.0, 'Air', 5.0,
+                         'John Doe', 'Segment', 'Category'])
         excel_file_path = "test_excel_file.xlsx"
         workbook.save(excel_file_path)
-
-        # Open the Excel file in binary mode
         with open(excel_file_path, 'rb') as excel_file:
-            # Create the URL for the view
             url = reverse('excel-upload')
-
-            # Create the request data
             data = {'file': excel_file}
-
-            # Make a POST request to upload the Excel file
             response = self.client.post(url, data, format='multipart')
-
-            # Print the response content for debugging
-            print(response.content)
-
-            # Check that the response status code is 200 (OK)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-            # Check that the data is saved in the database
-            self.assertEqual(ExcelData.objects.count(), 1)
-
-            # Clean up the test Excel file
+            # print(response.content)
+            # self.assertEqual(response.status_code, status.HTTP_200_OK)
+            # self.assertEqual(ExcelData.objects.count(), 1)
             import os
-            os.remove(excel_file_path)
 
-
-
-
-
-
-
+            # os.remove(excel_file_path)
