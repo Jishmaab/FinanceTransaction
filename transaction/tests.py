@@ -149,7 +149,6 @@ from django.utils.crypto import get_random_string
 
 class SignupViewTestCase(APITestCase):
     def setUp(self):
-        # Create a test user for login
         self.test_user = get_user_model().objects.create_user(
             username='testuser',
             email='test@example.com',
@@ -168,7 +167,7 @@ class SignupViewTestCase(APITestCase):
             'password': 'Password@123',
             'first_name':'firstname',
             'last_name':'lastname',
-            'user_type': 1,  # Assuming 1 is a valid user type
+            'user_type': 1,  
             'profile_picture': self.generate_image_file()
         }
 
@@ -176,9 +175,7 @@ class SignupViewTestCase(APITestCase):
         # print(response.content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], True)
-        # You can add more assertions based on your response structure
 
     def generate_image_file(self):
-        # Generate a random image file for testing
-        content = get_random_string(1024)  # 1024 bytes of random content
+        content = get_random_string(1024)  
         return SimpleUploadedFile("test_image.jpg", content.encode(), content_type="image/jpeg")
